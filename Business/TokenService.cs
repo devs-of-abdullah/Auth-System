@@ -1,4 +1,5 @@
 ﻿
+
 using Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -15,17 +16,19 @@ namespace Business
         {
             _config = config;
         }
-        public string CreateToken(UserDto user)
+        public string CreateToken(UserEntity user)
         {
             var Claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
 
             };
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]
+                ?? throw new InvalidOperationException("Jwt key is missing")));
 
-            var creds = new SigningCredentials(key,SecurityAlgorithms.HmacSha256);
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 issuer: _config["Jwt:Issuer"],
@@ -36,7 +39,7 @@ namespace Business
 
                 );
             return new JwtSecurityTokenHandler().WriteToken(token);
-                
+
         }
     }
 }

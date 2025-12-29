@@ -1,7 +1,6 @@
 ﻿
-
-using Microsoft.EntityFrameworkCore;
 using Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Data
 {
@@ -9,55 +8,24 @@ namespace Data
     {
         readonly AppDbContext _context;
         public UserRepository(AppDbContext context) => _context = context;
-        public async Task<UserDto?> GetByEmail(string email)
+        public async Task<UserEntity?> GetByEmailAsync(string email)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email );
-            
-            if (user == null) return null;
-
-            var foundUser = new UserDto()
-            {
-                Id = user.Id,
-                Email = user.Email,
-                Password = user.Password,
-
-            };
-            return foundUser;
+            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
-        public async Task<UserDto?> GetById(int id)
+        public async Task<UserEntity?> GetByIdAsync(int id)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
-            if (user == null) return null;
-
-            var foundUser = new UserDto()
-            {
-                Id = user.Id,
-                Email = user.Email,
-                Password = user.Password,
-
-            };
-            return foundUser;
-        } 
-
-        public async Task<bool> IsExistsById(int id)
+            return await _context.Users.FindAsync(id);
+        }
+        public async Task<bool> ExistsByEmailAsync(string email)
         {
-             return await _context.Users.AnyAsync(u => u.Id == id);  
+            return await _context.Users.AnyAsync(u => u.Email == email);
 
         }
-        public async Task<bool> IsExistsByEmail(string email)
-        {
-            return await _context.Users.AnyAsync(u =>u.Email == email);
-        }
 
-        public async Task Add(RegisterUserDto user) 
+        public async Task AddAsync(UserEntity user)
         {
-            var entity = new User
-            {
-                Email = user.Email,
-                Password = user.Password,
-            };
 
-            await _context.Users.AddAsync(entity);
+            _context.Users.Add(user);
             await _context.SaveChangesAsync();
         }
 

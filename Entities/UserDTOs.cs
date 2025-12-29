@@ -1,24 +1,33 @@
-﻿namespace Entities
-{
-   
-    
-        public class RegisterUserDto
-        {
-            public string Email { get; set; } = null!;
-            public string Password { get; set; } = null!;
+﻿
+using System.ComponentModel.DataAnnotations;
 
-        }
-        public class LoginUserDto
-        {
-            public string Email { get; set; } = null!;
-            public string Password { get; set; } = null!;
-        }
-      
-        public class UserDto
-        {
-            public int Id { get; set; }
-            public string Email { get; set; } = null!;
-            public string? Password { get; set; } = null!;
-        }
-     
+namespace Entities.DTOs
+{
+
+
+    public class RegisterUserDto
+    {
+        [Required, EmailAddress]
+        public string Email { get; set; } = null!;
+
+        [Required, MinLength(6)]
+        public string Password { get; set; } = null!;
+
+    }
+    public class LoginUserDto
+    {
+
+        [Required, EmailAddress]
+        public string Email { get; set; } = null!;
+
+        [Required]
+        public string Password { get; set; } = null!;
+    }
+
+    public class UserDto
+    {
+        public int Id { get; set; }
+        public string Email { get; set; } = null!;
+    }
+
 }

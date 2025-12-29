@@ -1,5 +1,5 @@
 ﻿using Business;
-using Entities;
+using Entities.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +9,7 @@ namespace API
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-         readonly IUserService _userService;
+        readonly IUserService _userService;
 
         public UserController(IUserService userService)
         {
@@ -19,31 +19,19 @@ namespace API
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
         {
-
-            if(!ModelState.IsValid) return BadRequest(ModelState);
-
-            var success = await _userService.Register(dto.Email, dto.Password);
-
-            if(!success) return BadRequest("Error creating User");
-
-            return Ok("User registered succesfully");
+            await _userService.RegisterAsync(dto.Email, dto.Password);
+            return StatusCode(201, "User registered succesfully");
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-              
-            var token = await _userService.Login(dto.Email, dto.Password);
 
-            if (string.IsNullOrEmpty(token))
-                return Unauthorized("Email or password is incorrect");
+            var token = await _userService.LoginAsync(dto.Email, dto.Password);
 
-            return Ok(new
-            {
-                token
-            });
+            return Ok(new { token });
         }
+
         [Authorize]
         [HttpGet("me")]
         public IActionResult Me()
