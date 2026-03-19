@@ -14,5 +14,6 @@ namespace Business.Interfaces
 
         Task HardDeleteAsync(int id);
         Task RestoreUserAsync(int id);
+        Task<PaginatedResponse<ReadUserDTO>> GetPagedAsync(PaginationFilterDTO filter);
     }
 }

@@ -1,4 +1,5 @@
 using Entities;
+using DTO.User;
 
 namespace Business.Interfaces
 {
@@ -11,5 +12,6 @@ namespace Business.Interfaces
         Task UpdateAsync(UserEntity user);
 
         Task HardDeleteAsync(UserEntity user);
+        Task<(IEnumerable<UserEntity> Users, int TotalCount)> GetPagedAsync(PaginationFilterDTO filter);
     }
 }

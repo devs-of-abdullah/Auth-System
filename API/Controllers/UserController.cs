@@ -19,6 +19,14 @@ public class UsersController : ControllerBase
         _authorizationService = authorizationService;
     }
 
+    [Authorize(Roles = "admin")]
+    [HttpGet(Name = "GetAllUsers")]
+    public async Task<ActionResult<PaginatedResponse<ReadUserDTO>>> GetAll([FromQuery] PaginationFilterDTO filter)
+    {
+        var result = await _userService.GetPagedAsync(filter);
+        return Ok(result);
+    }
+
 
 
 

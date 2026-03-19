@@ -10,5 +10,6 @@ namespace Business.Interfaces
         Task<bool> VerifyEmail(VerifyEmailRequestDTO request);
         Task<bool> ForgotPassword(ForgotPasswordRequestDTO request);
         Task<bool> ResetPassword(ResetPasswordRequestDTO request);
+        Task<bool> ResendVerificationEmail(ResendVerificationEmailRequestDTO request);
     }
 }

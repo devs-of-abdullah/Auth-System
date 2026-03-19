@@ -1,5 +1,5 @@
 using Business.Interfaces;
-using Business.Interfaces;
+using Business.Constants;
 using DTO.User;
 using Entities;
 namespace Business.Services
@@ -19,7 +19,7 @@ namespace Business.Services
                 throw new InvalidOperationException($"'{dto.Email}' email already exists");
 
 
-            var verificationToken = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+            var verificationToken = Random.Shared.Next(1000, 10000).ToString();
 
             var user = new UserEntity
             {
@@ -27,13 +27,15 @@ namespace Business.Services
                 Role = dto.Role,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 IsEmailVerified = false,
-                EmailVerificationToken = BCrypt.Net.BCrypt.HashPassword(verificationToken)
+                EmailVerificationToken = BCrypt.Net.BCrypt.HashPassword(verificationToken),
+                EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
+                EmailVerificationTokenSentAt = DateTime.UtcNow
             };
 
             var userId = await _repo.CreateAsync(user);
 
-            var emailBody = $"<h3>Welcome!</h3><p>Your verification token is: <strong>{verificationToken}</strong></p>";
-            await _emailService.SendEmailAsync(user.Email, "Verify Your Email", emailBody);
+            var emailBody = EmailTemplates.GetVerificationEmailBody(verificationToken);
+            await _emailService.SendEmailAsync(user.Email, EmailTemplates.VerificationEmailSubject, emailBody);
 
             return userId;
 
@@ -143,10 +145,19 @@ namespace Business.Services
             if (existing != null && existing.Id != userId)
                 throw new InvalidOperationException("Email already in use");
 
+            var verificationToken = Random.Shared.Next(1000, 10000).ToString();
+
             user.Email = normalizedEmail;
+            user.IsEmailVerified = false;
+            user.EmailVerificationToken = BCrypt.Net.BCrypt.HashPassword(verificationToken);
+            user.EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddMinutes(15);
+            user.EmailVerificationTokenSentAt = DateTime.UtcNow;
             user.UpdatedAt = DateTime.UtcNow;
 
             await _repo.UpdateAsync(user);
+
+            var emailBody = EmailTemplates.GetVerificationEmailBody(verificationToken);
+            await _emailService.SendEmailAsync(user.Email, EmailTemplates.VerificationEmailSubject, emailBody);
         }
         public async Task AdminSoftDeleteAsync(int id)
         {
@@ -182,6 +193,22 @@ namespace Business.Services
             user.UpdatedAt = DateTime.UtcNow;
 
             await _repo.UpdateAsync(user);
+        }
+
+        public async Task<PaginatedResponse<ReadUserDTO>> GetPagedAsync(PaginationFilterDTO filter)
+        {
+            var (users, totalCount) = await _repo.GetPagedAsync(filter);
+
+            var userDtos = users.Select(u => new ReadUserDTO
+            {
+                Id = u.Id,
+                Email = u.Email,
+                Role = u.Role,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt
+            });
+
+            return new PaginatedResponse<ReadUserDTO>(userDtos, totalCount, filter.PageNumber, filter.PageSize);
         }
     }
 

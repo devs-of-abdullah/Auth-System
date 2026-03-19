@@ -46,6 +46,18 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Email successfully verified. You can now login." });
     }
 
+    [HttpPost("resend-verification-email")]
+    [EnableRateLimiting("AuthLimiter")]
+    public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendVerificationEmailRequestDTO request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        await _authService.ResendVerificationEmail(request);
+
+        return Ok(new { message = "If the email exists and is not verified, a new verification code has been sent." });
+    }
+
     [HttpPost("refresh")]
     [EnableRateLimiting("AuthLimiter")]
     public async Task<IActionResult> Refresh([FromBody] RefreshRequestDTO request)

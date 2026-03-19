@@ -1,5 +1,6 @@
 using DTO.Auth;
 using Business.Interfaces;
+using Business.Constants;
 using Microsoft.Extensions.Configuration;
 namespace Business.Services
 {
@@ -104,11 +105,15 @@ namespace Business.Services
 
             if (user.IsEmailVerified) return true; 
 
+            if (user.EmailVerificationTokenExpiresAt != null && user.EmailVerificationTokenExpiresAt < DateTime.UtcNow)
+                return false;
+
             if (string.IsNullOrEmpty(user.EmailVerificationToken) || !BCrypt.Net.BCrypt.Verify(request.Token, user.EmailVerificationToken))
                 return false;
 
             user.IsEmailVerified = true;
             user.EmailVerificationToken = null;
+            user.EmailVerificationTokenExpiresAt = null;
             user.UpdatedAt = DateTime.UtcNow;
 
             await _userRepository.UpdateAsync(user);
@@ -129,8 +134,8 @@ namespace Business.Services
 
             await _userRepository.UpdateAsync(user);
 
-            var emailBody = $"<h3>Password Reset</h3><p>Your password reset token is: <strong>{resetToken}</strong></p>";
-            await _emailService.SendEmailAsync(user.Email, "Reset Your Password", emailBody);
+            var emailBody = EmailTemplates.GetPasswordResetBody(resetToken);
+            await _emailService.SendEmailAsync(user.Email, EmailTemplates.PasswordResetSubject, emailBody);
 
             return true;
         }
@@ -154,6 +159,32 @@ namespace Business.Services
             user.UpdatedAt = DateTime.UtcNow;
 
             await _userRepository.UpdateAsync(user);
+
+            return true;
+        }
+        public async Task<bool> ResendVerificationEmail(ResendVerificationEmailRequestDTO request)
+        {
+            var user = await _userRepository.GetByEmailAsync(request.Email.Trim().ToLower());
+            if (user == null || user.IsDeleted || user.IsEmailVerified)
+                return false;
+
+            if (user.EmailVerificationTokenSentAt != null &&
+                user.EmailVerificationTokenSentAt.Value.AddMinutes(1) > DateTime.UtcNow)
+            {
+                throw new InvalidOperationException("Please wait 1 minute before requesting a new verification code.");
+            }
+
+            var verificationToken = Random.Shared.Next(1000, 10000).ToString();
+
+            user.EmailVerificationToken = BCrypt.Net.BCrypt.HashPassword(verificationToken);
+            user.EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddMinutes(15);
+            user.EmailVerificationTokenSentAt = DateTime.UtcNow;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepository.UpdateAsync(user);
+
+            var emailBody = EmailTemplates.GetVerificationEmailBody(verificationToken);
+            await _emailService.SendEmailAsync(user.Email, EmailTemplates.VerificationEmailSubject, emailBody);
 
             return true;
         }

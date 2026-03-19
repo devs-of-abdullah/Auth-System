@@ -22,4 +22,6 @@ public class UserEntity
     public DateTime? ResetTokenExpiresAt { get; set; }
     public bool IsEmailVerified { get; set; } = false;
     public string? EmailVerificationToken { get; set; }
+    public DateTime? EmailVerificationTokenExpiresAt { get; set; }
+    public DateTime? EmailVerificationTokenSentAt { get; set; }
 }
