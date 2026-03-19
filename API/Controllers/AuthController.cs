@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
@@ -31,6 +31,21 @@ public class AuthController : ControllerBase
         return Ok(tokens);
     }
 
+    [HttpPost("verify-email")]
+    [EnableRateLimiting("AuthLimiter")]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequestDTO request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var result = await _authService.VerifyEmail(request);
+
+        if (!result)
+            return BadRequest(new { message = "Invalid email or verification token." });
+
+        return Ok(new { message = "Email successfully verified. You can now login." });
+    }
+
     [HttpPost("refresh")]
     [EnableRateLimiting("AuthLimiter")]
     public async Task<IActionResult> Refresh([FromBody] RefreshRequestDTO request)
@@ -44,6 +59,33 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid refresh request" });
 
         return Ok(tokens);
+    }
+
+    [HttpPost("forgot-password")]
+    [EnableRateLimiting("AuthLimiter")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDTO request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        await _authService.ForgotPassword(request);
+        
+        return Ok(new { message = "If the email exists, a password reset token has been generated." });
+    }
+
+    [HttpPost("reset-password")]
+    [EnableRateLimiting("AuthLimiter")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDTO request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var result = await _authService.ResetPassword(request);
+
+        if (!result)
+            return BadRequest(new { message = "Invalid or expired token, or email does not match." });
+
+        return Ok(new { message = "Password has been successfully reset. You can now login." });
     }
 
     [Authorize]

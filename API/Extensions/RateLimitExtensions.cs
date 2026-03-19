@@ -1,4 +1,4 @@
-﻿using System.Threading.RateLimiting;
+using System.Threading.RateLimiting;
 
 namespace API.Extensions;
 
@@ -18,9 +18,9 @@ public static class RateLimitExtensions
                     partitionKey: ip,
                     factory: _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = 5,
+                        PermitLimit = 100,
                         Window = TimeSpan.FromMinutes(1),
-                        QueueLimit = 0
+                        QueueLimit = 10
                     });
             });
             options.OnRejected = async (context, cancellationToken) =>

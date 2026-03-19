@@ -1,5 +1,5 @@
-﻿using Business.Interfaces;
-using Data;
+using Business.Interfaces;
+using Business.Interfaces;
 using DTO.User;
 using Entities;
 namespace Business.Services
@@ -17,14 +17,23 @@ namespace Business.Services
                 throw new InvalidOperationException($"'{dto.Email}' email already exists");
 
 
+            var verificationToken = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+
             var user = new UserEntity
             {
                 Email = dto.Email,
                 Role = dto.Role,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                IsEmailVerified = false,
+                EmailVerificationToken = BCrypt.Net.BCrypt.HashPassword(verificationToken)
             };
 
-            return await _repo.CreateAsync(user);
+            var userId = await _repo.CreateAsync(user);
+
+            // Simulate sending verification email
+            Console.WriteLine($"[EMAIL SIMULATION] Verification Token for {user.Email}: {verificationToken}");
+
+            return userId;
 
 
         }
@@ -146,6 +155,28 @@ namespace Business.Services
                 throw new InvalidOperationException("User already deleted");
 
             user.IsDeleted = true;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _repo.UpdateAsync(user);
+        }
+
+        public async Task HardDeleteAsync(int id)
+        {
+            var user = await _repo.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException("User not found");
+
+            await _repo.HardDeleteAsync(user);
+        }
+
+        public async Task RestoreUserAsync(int id)
+        {
+            var user = await _repo.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException("User not found");
+
+            if (!user.IsDeleted)
+                throw new InvalidOperationException("User is not currently soft-deleted");
+
+            user.IsDeleted = false;
             user.UpdatedAt = DateTime.UtcNow;
 
             await _repo.UpdateAsync(user);

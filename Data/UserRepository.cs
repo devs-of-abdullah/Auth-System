@@ -1,4 +1,5 @@
-﻿using Entities;
+using Entities;
+using Business.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data;
@@ -39,4 +40,9 @@ public class UserRepository : IUserRepository
         await _context.SaveChangesAsync();
     }
     
+    public async Task HardDeleteAsync(UserEntity user)
+    {
+        _context.users.Remove(user);
+        await _context.SaveChangesAsync();
+    }
 }

@@ -1,6 +1,6 @@
-﻿using Entities;
+using Entities;
 
-namespace Data
+namespace Business.Interfaces
 {
     public interface IUserRepository
     {
@@ -10,5 +10,6 @@ namespace Data
         Task<int> CreateAsync(UserEntity user);
         Task UpdateAsync(UserEntity user);
 
+        Task HardDeleteAsync(UserEntity user);
     }
 }

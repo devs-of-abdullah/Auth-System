@@ -15,9 +15,17 @@ ASP.NET Core Web API starter template with layered architecture (API, Business, 
 |-------|---------------|
 | `DTOs` | Data transfer objects |
 | `Entities` | Domain models |
-| `Data` | EF Core DbContext, repository interfaces and implementations |
-| `Business` | Services, token generation, business logic |
-| `API` | Controllers, middleware, extensions, DI configuration |
+| `Business` | **Core**: Services, repository interfaces, business logic |
+| `Data` | **Infrastructure**: EF Core DbContext, repository implementations |
+| `API` | **Presentation**: Controllers, middleware, extensions, DI configuration |
+
+> Note: The project implements standard Clean Architecture dependencies, where `Data` depends on `Business` rather than the traditionally inverted N-Tier architecture.
+
+### Features Included
+- Login, Logout, Refresh Tokens
+- User Registration & Deletion
+- Get All Users (Admin pagination)
+- Forgot & Reset Password flows
 
 ---
 

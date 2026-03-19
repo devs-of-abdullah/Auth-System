@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics;
 
 public static class ExceptionMExtensions
 {
@@ -19,6 +19,12 @@ public static class ExceptionMExtensions
                     ArgumentException => (StatusCodes.Status400BadRequest, exception.Message),
                     _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
                 };
+
+                if (statusCode == StatusCodes.Status500InternalServerError && exception != null)
+                {
+                    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(exception, "An unhandled exception has occurred while executing the request.");
+                }
 
                 context.Response.StatusCode = statusCode;
                 context.Response.ContentType = "application/json";

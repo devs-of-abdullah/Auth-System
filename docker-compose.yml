@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrong@Passw0rd
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+
+  api:
+    build:
+      context: .
+      dockerfile: API/Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DefaultConnection=Server=db,1433;Database=AuthSystemDocker;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+      - JWT_KEY=THIS_IS_A_VERY_SECRET_KEY_DOCKER_32_CHAR_MINIMUM
+      - JWT_ISSUER=AuthSystemDocker
+      - JWT_AUDIENCE=AuthSystemDockerUsers
+    depends_on:
+      - db
+
+volumes:
+  sql_data:

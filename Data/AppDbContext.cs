@@ -1,4 +1,4 @@
-﻿using Entities;
+using Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data
@@ -46,8 +46,6 @@ namespace Data
 
                 entity.HasQueryFilter(u => !u.IsDeleted);
             });
-
-            
         }
 
 

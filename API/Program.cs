@@ -3,7 +3,6 @@ using Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
@@ -26,16 +25,26 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    if (Environment.GetEnvironmentVariable("APPLY_MIGRATIONS") == "true" || app.Environment.IsDevelopment())
+    {
+        db.Database.Migrate();
+    }
 }
 
 app.UseGlobalExceptionHandler();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+else
+{
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+app.UseCors("RestrictedCors");
 
 app.UseRateLimiter();
 
@@ -43,5 +52,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

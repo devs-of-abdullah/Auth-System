@@ -1,4 +1,4 @@
-﻿using DTO.Auth;
+using DTO.Auth;
 
 namespace Business.Interfaces
 {
@@ -7,5 +7,8 @@ namespace Business.Interfaces
         Task<TokenResponseDTO?> Login(LoginRequestDTO dto);
         Task<TokenResponseDTO?> RefreshToken(RefreshRequestDTO dto);
         Task Logout(int id, string refreshToken);
+        Task<bool> VerifyEmail(VerifyEmailRequestDTO request);
+        Task<bool> ForgotPassword(ForgotPasswordRequestDTO request);
+        Task<bool> ResetPassword(ResetPasswordRequestDTO request);
     }
 }

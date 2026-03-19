@@ -1,4 +1,5 @@
-﻿using Business;
+using Business;
+using Business.Interfaces;
 using Business.Interfaces;
 using Business.Services;
 using Data;
@@ -16,8 +17,11 @@ public static class ServiceExtensions
          ?? configuration.GetConnectionString("DefaultConnection")
          ?? throw new Exception("Database connection string not found.");
 
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(connectionString, b => b.MigrationsAssembly("Data")));
+        services.AddHttpContextAccessor();
+
+        services.AddDbContext<AppDbContext>(options => {
+            options.UseSqlServer(connectionString, b => b.MigrationsAssembly("Data"));
+        });
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
@@ -33,13 +37,32 @@ public static class ServiceExtensions
 
         services.AddCors(options =>
         {
-            options.AddPolicy("AllowAll", policy =>
+            var allowedOrigins = configuration.GetSection("AllowedOrigins").Get<string[]>();
+
+            options.AddPolicy("RestrictedCors", policy =>
             {
-                policy.AllowAnyOrigin()
-                      .AllowAnyHeader()
-                      .AllowAnyMethod();
+                var isProduction = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production";
+                if (allowedOrigins != null && allowedOrigins.Length > 0)
+                {
+                    policy.WithOrigins(allowedOrigins)
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                }
+                else if (!isProduction)
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                }
+                else
+                {
+                    throw new InvalidOperationException("AllowedOrigins must be configured in Production environment.");
+                }
             });
         });
+
+        services.AddHealthChecks()
+            .AddDbContextCheck<AppDbContext>();
 
         return services;
     }

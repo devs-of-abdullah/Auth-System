@@ -1,4 +1,4 @@
-﻿namespace Entities;
+namespace Entities;
 
 public class UserEntity
 {
@@ -18,4 +18,8 @@ public class UserEntity
     public string? RefreshTokenHash { get; set; } 
     public DateTime? RefreshTokenExpiresAt { get; set; }
     public DateTime? RefreshTokenRevokedAt { get; set; }
+    public string? ResetToken { get; set; }
+    public DateTime? ResetTokenExpiresAt { get; set; }
+    public bool IsEmailVerified { get; set; } = false;
+    public string? EmailVerificationToken { get; set; }
 }
