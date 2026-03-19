@@ -7,9 +7,11 @@ namespace Business.Services
     public class UserService : IUserService
     {
         readonly IUserRepository _repo;
-        public UserService(IUserRepository repo)
+        readonly IEmailService _emailService;
+        public UserService(IUserRepository repo, IEmailService emailService)
         {
             _repo = repo;
+            _emailService = emailService;
         }
         public async Task<int> CreateAsync(CreateUserDTO dto)
         {
@@ -30,8 +32,8 @@ namespace Business.Services
 
             var userId = await _repo.CreateAsync(user);
 
-            // Simulate sending verification email
-            Console.WriteLine($"[EMAIL SIMULATION] Verification Token for {user.Email}: {verificationToken}");
+            var emailBody = $"<h3>Welcome!</h3><p>Your verification token is: <strong>{verificationToken}</strong></p>";
+            await _emailService.SendEmailAsync(user.Email, "Verify Your Email", emailBody);
 
             return userId;
 

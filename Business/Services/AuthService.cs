@@ -8,12 +8,14 @@ namespace Business.Services
          readonly IUserRepository _userRepository;
          readonly ITokenService _tokenService;
          readonly IConfiguration _config;
+         readonly IEmailService _emailService;
 
-        public AuthService(IUserRepository userRepository, ITokenService tokenService, IConfiguration config)
+        public AuthService(IUserRepository userRepository, ITokenService tokenService, IConfiguration config, IEmailService emailService)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
             _config = config;
+            _emailService = emailService;
         }
 
         public async Task<TokenResponseDTO?> Login(LoginRequestDTO request)
@@ -28,9 +30,8 @@ namespace Business.Services
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 return null;
 
-            // Bypass email verification for now
-            // if (!user.IsEmailVerified)
-            //    throw new UnauthorizedAccessException("Please verify your email address before logging in.");
+            if (!user.IsEmailVerified)
+                throw new UnauthorizedAccessException("Please verify your email address before logging in.");
 
             var tokens = _tokenService.GenerateToken(user);
 
@@ -128,7 +129,8 @@ namespace Business.Services
 
             await _userRepository.UpdateAsync(user);
 
-         
+            var emailBody = $"<h3>Password Reset</h3><p>Your password reset token is: <strong>{resetToken}</strong></p>";
+            await _emailService.SendEmailAsync(user.Email, "Reset Your Password", emailBody);
 
             return true;
         }
