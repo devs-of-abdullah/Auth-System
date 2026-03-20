@@ -108,7 +108,7 @@ namespace Business.Services
             if (user.EmailVerificationTokenExpiresAt != null && user.EmailVerificationTokenExpiresAt < DateTime.UtcNow)
                 return false;
 
-            if (string.IsNullOrEmpty(user.EmailVerificationToken) || !BCrypt.Net.BCrypt.Verify(request.Token, user.EmailVerificationToken))
+            if (string.IsNullOrEmpty(user.EmailVerificationToken) || !BCrypt.Net.BCrypt.Verify(request.Code, user.EmailVerificationToken))
                 return false;
 
             user.IsEmailVerified = true;
